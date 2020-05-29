@@ -23,7 +23,7 @@
 #' @examples
 #'     library(rbiom)
 #'     
-#'     infile <- system.file("extdata", "hmp50.biom", package = "rbiom")
+#'     infile <- system.file("extdata", "hmp50.bz2", package = "rbiom")
 #'     biom <- read.biom(infile)
 #'     
 #'     ex1 <- select(biom, c('HMP14', 'HMP22', 'HMP03'))
@@ -62,6 +62,9 @@ select <- function (biom, samples=NULL, nTop=NULL, nRandom=NULL, seed=0) {
   biom$metadata  <- biom$metadata[samples,,drop=FALSE]
   if (!is.null(biom$phylogeny)) {
     biom$phylogeny <- rbiom::subtree(biom$phylogeny, taxa)
+  }
+  if (!is.null(biom$sequences)) {
+    biom$sequences <- biom$sequences[taxa]
   }
   biom$info$shape <- dim(biom$counts)
   biom$info$nnz   <- length(biom$counts$v)
