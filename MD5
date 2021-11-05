@@ -1,5 +1,6 @@
-2eaa5a695f445c25a0f826c388322284 *DESCRIPTION
-cb4865b379b7f79aac92096c22f223bf *NAMESPACE
+afae52988f3201a4e8cb79422ff11609 *DESCRIPTION
+2fdd8e70e8f2e16bf47919250887b735 *NAMESPACE
+78e73d051ac1e7d12a76173ea4b88e29 *NEWS.md
 0956caae83ad407a30cbd175f7d7f3e3 *R/RcppExports.R
 d3d1a96c7434a89cb361c256533ec386 *R/accessors.r
 963ed1dd9d14543f489bdedf25e4c73a *R/alpha.div.r
@@ -17,7 +18,7 @@ bc6397ee37cfe7a300a228dcd423ebc6 *R/rbiom.r
 94065dcb24f61ae5279d56f0a4d71eba *R/taxa.rollup.r
 29ba2daba5560bcd48b10ba182dfd008 *R/tips.r
 7fe703759ed207ae89aef8dff5228640 *R/unifrac.r
-8cf10e81684c94e8d3772ebd9540a521 *R/write.biom.r
+9f50be60e411540b0f539e96c8aaee36 *R/write.biom.r
 dc49c01e56442a8b968f253e43997ef0 *R/write.fasta.r
 32a53a49cb5d2db853ce9fe7321a1347 *R/write.tree.r
 438134cf12333fa760a79df3accb4cce *R/write.xlsx.r
@@ -55,7 +56,7 @@ a7c460b1d0dbbef452c907455efd67f8 *man/write.fasta.Rd
 d04d8e9c834045ca66ec7d3b27163aab *man/write.tree.Rd
 6e77d77f657d7cfc2941e05a8be582de *man/write.xlsx.Rd
 e3d3cb360fbfdb3c6974e14eb5f09870 *src/Makevars.win
-0a4566980b472c45e16795e24607a7df *src/RcppExports.cpp
+dd85686c320eb8be17c5f14120d6b8ae *src/RcppExports.cpp
 fe1423e163060a6d21a788ac90445a43 *src/par_beta_div.cpp
 eda04109ce22191a433c9dda5e8bac27 *src/par_unifrac.cpp
 f5558534ba1c15ede4e15928fcd1ddd9 *src/rcpp_alpha_div.cpp

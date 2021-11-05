@@ -35,6 +35,7 @@ importFrom("Rcpp", "sourceCpp")
 importFrom("magrittr","%>%")
 importFrom("methods", "is", "as")
 importFrom("stats", "fivenum", "setNames", "as.dist", "na.omit", "aggregate")
+importFrom("rlang","%||%")
 importFrom("utils", "download.file", "head", "write.table", "read.csv", "read.delim", "packageDescription")
 
 S3method(print, BIOM)
