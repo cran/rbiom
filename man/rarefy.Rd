@@ -2,44 +2,64 @@
 % Please edit documentation in R/rarefy.r
 \name{rarefy}
 \alias{rarefy}
-\title{Subset counts so that all samples have the same number of observations.}
+\title{Rarefy OTU counts.}
 \usage{
-rarefy(biom, depth = NULL, seed = 0)
+rarefy(biom, depth = 0.1, n = NULL, seed = 0, clone = TRUE)
 }
 \arguments{
-\item{biom}{A \code{matrix}, \code{simple_triplet_matrix}, or \code{BIOM} 
-object, as returned from \link{read.biom}. For matrices, the rows and 
-columns are assumed to be the taxa and samples, respectively.}
+\item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
+Any value accepted by \code{\link[=as_rbiom]{as_rbiom()}} can also be given here.}
 
-\item{depth}{The number of observations to keep, per sample. If set to
-\code{NULL}, a depth will be automatically selected. Samples that have
-fewer than this number of observations will be dropped. If called on
-data with non-integer abundances, values will be re-scaled to integers 
-between 1 and \code{depth} such that they sum to \code{depth}.}
+\item{depth}{How many observations to keep per sample. When
+\verb{0 < depth < 1}, it is taken as the minimum percentage of the
+dataset's observations to keep. Ignored when \code{n} is specified.
+Default: \code{0.1}}
 
-\item{seed}{An integer to use for seeding the random number generator. If
-you need to create different random rarefactions of the same \code{BIOM}
-object, set this seed value to a different number each time.}
+\item{n}{The number of samples to keep. When \verb{0 < n < 1}, it is taken as
+the percentage of samples to keep. If negative, that number or
+percentage of samples is dropped. If \code{0}, all samples are kept. If
+\code{NULL}, \code{depth} is used instead.
+Default: \code{NULL}}
+
+\item{seed}{An integer seed for randomizing which observations to keep or
+drop. If you need to create different random rarefactions of the same
+data, set the seed to a different number each time.}
+
+\item{clone}{Create a copy of \code{biom} before modifying. If \code{FALSE}, \code{biom}
+is modified in place as a side-effect. See \link[=speed]{speed ups} for
+use cases. Default: \code{TRUE}}
 }
 \value{
-A \code{matrix}, \code{simple_triplet_matrix}, or \code{BIOM} 
-    object, depending on the input object type. The type of object provided
-    is the same type that is returned. The retained observations are randomly
-    selected, based on a seed value derived from the \code{BIOM} object. 
-    Therefore, rarefying the same biom to the same depth will always produce
-    the same resultant rarification.
+An \link[=rbiom_objects]{rbiom object}.
 }
 \description{
-Subset counts so that all samples have the same number of observations.
+Sub-sample OTU observations such that all samples have an equal number.
+If called on data with non-integer abundances, values will be re-scaled to
+integers between 1 and \code{depth} such that they sum to \code{depth}.
 }
 \examples{
     library(rbiom)
-
-    infile <- system.file("extdata", "hmp50.bz2", package = "rbiom")
-    biom <- read.biom(infile)
-    range(slam::col_sums(biom$counts))
-
-    biom <- rarefy(biom, depth=1000)
-    range(slam::col_sums(biom$counts))
+    
+    sample_sums(hmp50) \%>\% head()
+    
+    biom <- rarefy(hmp50)
+    sample_sums(biom) \%>\% head()
 
 }
+\seealso{
+Other rarefaction: 
+\code{\link{rare_corrplot}()},
+\code{\link{rare_multiplot}()},
+\code{\link{rare_stacked}()},
+\code{\link{rarefy_cols}()},
+\code{\link{sample_sums}()}
+
+Other transformations: 
+\code{\link{modify_metadata}},
+\code{\link{rarefy_cols}()},
+\code{\link{slice_metadata}},
+\code{\link{subset}()},
+\code{\link{with}()}
+}
+\concept{rarefaction}
+\concept{transformations}

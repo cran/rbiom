@@ -5,7 +5,7 @@ using namespace Rcpp;
 
 
 // [[Rcpp::export]]
-List rcpp_rarefy(List sparseMatrix, int depth, int seed = 8675309) {
+List rcpp_rarefy(List sparseMatrix, int depth, int seed = 0) {
   
   
   //======================================================
@@ -36,6 +36,10 @@ List rcpp_rarefy(List sparseMatrix, int depth, int seed = 8675309) {
   int last_idx  = max(mtxSample);
 
   for (int sample_idx = first_idx; sample_idx <= last_idx; sample_idx++) {
+    
+    // if (sample_idx % 1000 == 0) {
+    //   Rcpp::checkUserInterrupt();
+    // }
 
 
     //======================================================
@@ -119,7 +123,7 @@ List rcpp_rarefy(List sparseMatrix, int depth, int seed = 8675309) {
       taxa[j] = taxa(nSeqs - i - 1);
     }
 
-    IntegerVector tabulated = IntegerVector(max(taxa) + 1);
+    IntegerVector tabulated = IntegerVector(mtxSize + 1);
     for (int i = 0; i < depth; i++) {
       tabulated(kept[i])++;
     }
@@ -149,8 +153,8 @@ List rcpp_rarefy(List sparseMatrix, int depth, int seed = 8675309) {
   
   mtxSize = returnAbundance.size();
 
-  int nInitSample = max(mtxSample);
-  int nInitTaxa   = max(mtxTaxa);
+  int nInitSample = sampleNames.size();
+  int nInitTaxa   = taxaNames.size();
 
 
   //======================================================
