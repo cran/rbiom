@@ -55,7 +55,7 @@ alpha.div <- function (biom, rarefy = FALSE) {
   for (i in rarefy) {
     
     df <- rarefy(biom, depth = i) %>%
-      adiv_matrix() %>%
+      adiv_matrix('.all') %>%
       as_tibble(rownames = 'Sample') %>%
       as.data.frame()
     
@@ -274,9 +274,16 @@ select.rbiom <- function (.data, samples = NULL, nTop = NULL, nRandom = NULL, se
   if (!is.null(samples)) biom$counts <- biom$counts[,samples]
   if (!is.null(nTop))    biom$counts <- biom$counts[,names(head(sample_sums(biom), nTop))]
   if (!is.null(nRandom)) {
-    set.seed(seed)
+    
     stopifnot(nRandom <= biom$n_samples)
-    biom$counts <- biom$counts[,sample(seq_len(ncol(biom$counts)), nRandom)]
+    
+    # Preserve current .Random.seed
+    oldseed <- if (exists(".Random.seed")) .Random.seed else NULL
+    set.seed(seed)
+    indices <- sample(seq_len(biom$n_samples), nRandom)
+    if (!is.null(oldseed)) .Random.seed <- oldseed
+    
+    biom$counts <- biom$counts[,indices]
   }
   
   return (biom)

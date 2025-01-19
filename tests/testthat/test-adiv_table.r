@@ -10,8 +10,8 @@ test_that("adiv_matrix", {
 })
 
 test_that("adiv_table", {
-  df <- adiv_table(min5, trans = "rank")
-  df <- adiv_table(min5, trans = "rank") # tests caching
+  df <- adiv_table(min5, adiv = 'Shannon', trans = "rank")
+  df <- adiv_table(min5, adiv = 'Shannon', trans = "rank") # tests caching
   expect_equal(as.character(df$.sample), min5$samples)
   expect_equal(df$.depth, c(1660, 1371, 1353, 1895, 3939))
   expect_equal(df$.adiv, factor(rep('Shannon', 5)))

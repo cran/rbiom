@@ -4,7 +4,13 @@
 \alias{adiv_table}
 \title{Calculate the alpha diversity of each sample.}
 \usage{
-adiv_table(biom, adiv = "Shannon", md = ".all", transform = "none")
+adiv_table(
+  biom,
+  adiv = "Shannon",
+  md = ".all",
+  transform = "none",
+  cpus = NULL
+)
 }
 \arguments{
 \item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
@@ -23,6 +29,9 @@ to include all metadata fields. Default: \code{'.all'}}
 \code{c("none", "rank", "log", "log1p", "sqrt", "percent")}. \code{"rank"} is
 useful for correcting for non-normally distributions before applying
 regression statistics. Default: \code{"none"}}
+
+\item{cpus}{The number of CPUs to use. Set to \code{NULL} to use all available,
+or to \code{1} to disable parallel processing. Default: \code{NULL}}
 }
 \value{
 A data frame of alpha diversity values.
@@ -42,7 +51,7 @@ Calculate the alpha diversity of each sample.
     adiv_table(biom)
     
     biom <- rarefy(biom)
-    adiv_table(biom, adiv = ".all", md = NULL)
+    adiv_table(biom, md = NULL)
 }
 \seealso{
 Other alpha_diversity: 

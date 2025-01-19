@@ -20,10 +20,10 @@
 #'     adiv_table(biom)
 #'     
 #'     biom <- rarefy(biom)
-#'     adiv_table(biom, adiv = ".all", md = NULL)
+#'     adiv_table(biom, md = NULL)
 
 adiv_table <- function (
-    biom, adiv = "Shannon", md = ".all", transform = "none" ) {
+    biom, adiv = "Shannon", md = ".all", transform = "none", cpus = NULL ) {
   
   biom   <- as_rbiom(biom)
   params <- eval_envir(environment())
@@ -50,8 +50,7 @@ adiv_table <- function (
   #________________________________________________________
   # Compute adiv values
   #________________________________________________________
-  mtx <- adiv_matrix(biom = biom, transform = transform)
-  mtx <- mtx[, unique(c('Depth', adiv))]
+  mtx <- adiv_matrix(biom = biom, adiv = adiv, transform = transform)
   tbl <- tibble(
     '.sample'    = rownames(mtx)[row(mtx)] %>% factor(levels = rownames(mtx)),
     '.depth'     = unname(mtx[,'Depth'][row(mtx)]),
@@ -108,10 +107,17 @@ adiv_table <- function (
 #' Create a matrix of samples x alpha diversity metrics.
 #' 
 #' @inherit documentation_default
+#' 
+#' @param adiv   Alpha diversity metric(s) to use. Options are: `"OTUs"`, 
+#'        `"Shannon"`, `"Chao1"`, `"Simpson"`, and/or 
+#'        `"InvSimpson"`. Set `adiv=".all"` to use all metrics.
+#'        Multiple/abbreviated values allowed.
+#'        Default: `".all"`
 #'        
-#' @return A numeric matrix with samples as rows and columns named 
-#'         \bold{Depth}, \bold{OTUs}, \bold{Shannon}, \bold{Chao1}, 
-#'         \bold{Simpson}, and \bold{InvSimpson}.
+#' @return A numeric matrix with samples as rows. The first column is 
+#'         \bold{Depth}. Remaining columns are the alpha diversity metric names 
+#'         given by `adiv`: one or more of \bold{OTUs}, \bold{Shannon}, 
+#'         \bold{Chao1}, \bold{Simpson}, and \bold{InvSimpson}.
 #'     
 #' @export
 #' @examples
@@ -121,7 +127,7 @@ adiv_table <- function (
 #'     
 #'     adiv_matrix(biom)
 
-adiv_matrix <- function (biom, transform = "none") {
+adiv_matrix <- function (biom, adiv = ".all", transform = "none", cpus = NULL) {
   
   biom <- as_rbiom(biom)
   
@@ -141,39 +147,46 @@ adiv_matrix <- function (biom, transform = "none") {
   #________________________________________________________
   # Check for valid arguments.
   #________________________________________________________
+  validate_adiv(max = Inf)
   validate_var_choices('transform', c("none", "rank", "log", "log1p", "sqrt"))
+  validate_cpus()
   
   
   
   #________________________________________________________
   # We want a numeric matrix of samples x adiv metrics
   #________________________________________________________
-  mtx <- biom$counts
-  df  <- rcpp_alpha_div(mtx)
   
+  otu_mtx <- as.matrix(biom$counts)
   
+  algorithms <- 0L
+  if ('Shannon' %in% adiv)                           algorithms = algorithms + 1L
+  if ('Chao1'   %in% adiv)                           algorithms = algorithms + 2L
+  if ('Simpson' %in% adiv || 'InvSimpson' %in% adiv) algorithms = algorithms + 4L
+  storage.mode(algorithms) <- 'integer'
   
-  #________________________________________________________
-  # Optionally transform the computed diversity values.
-  #________________________________________________________
-  if (transform != "none") # "rank", "log", "log1p", "sqrt", "percent"
-    for (i in c('OTUs', 'Shannon', 'Chao1', 'Simpson', 'InvSimpson')) {
-      if (transform == "percent") {
-        df[[i]] <- tryCatch(df[[i]] / sum(df[[i]]), error = function (e) { warning(e); df[[i]] })
-      } else {
-        df[[i]] <- do.call(`::`, list('base', transform))(df[[i]])
-      }
-    }
+  n_threads <- as.integer(cpus)
+  storage.mode(otu_mtx) <- 'double'
   
+  mtx <- matrix(
+    data     = .Call(C_alpha_div, otu_mtx, algorithms, n_threads), 
+    nrow     = biom$n_samples, 
+    ncol     = 6,
+    dimnames = list(biom$samples, c('Depth', 'OTUs', 'Shannon', 'Chao1', 'Simpson', 'InvSimpson')) )
   
+  mtx <- mtx[,c('Depth', adiv), drop=FALSE]
   
-  #________________________________________________________
-  # Move sample names from df$.sample to rownames(df).
-  #________________________________________________________
-  rownames(df) <- df[['.sample']]
-  mtx <- as.matrix(df[,-1,drop=FALSE])
-  
-  
+  if (transform != 'none')
+    for (metric in adiv)
+      mtx[,metric] <- switch(
+        EXPR = transform,
+        'rank'    = base::rank(mtx[,metric]), 
+        'log'     = base::log(mtx[,metric]), 
+        'log1p'   = base::log1p(mtx[,metric]), 
+        'sqrt'    = base::sqrt(mtx[,metric]), 
+        'percent' = tryCatch(
+          expr  = mtx[,metric] / sum(mtx[,metric]), 
+          error = function (e) { warning(e); NA_real_ } ))
   
   attr(mtx, 'cmd') <- cmd
   set_cache_value(cache_file, mtx)
