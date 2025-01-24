@@ -510,7 +510,8 @@ relevel <- function (tbl) {
       lvls <- lvls[!is.na(lvls)]
       if (length(f <- which(lvls != trimws(lvls))) > 0) {
         field <- names(tbl)[[i]]
-        cli_warn("Whitespace trimmed from {.field {field}} column {qty(length(f))} value{?s} {.val {lvls[f]}}.")
+        cli_warn(
+          c('i' = "Whitespace trimmed from {.field {field}} column {qty(length(f))} value{?s} {.val {lvls[f]}}.") )
         levels(tbl[[i]]) %<>% trimws()
       }
     }
@@ -525,13 +526,18 @@ relevel <- function (tbl) {
 
 require_package <- function (pkg, reason = 'for this command') {
   
-  if (nzchar(system.file(package = pkg))) return (invisible(NULL))
+  if (!nzchar(system.file(package = pkg)))
+    package_missing(pkg = pkg, reason = reason)
+  
+  return (invisible(NULL))
+}
+
+package_missing <- function (pkg,  reason = 'for this command') {
   
   cli_abort(c(
     'x' = "The {.pkg {pkg}} R package is required {reason}.",
     'i' = "To install {.pkg {pkg}}, run:",
     '>' = if (!nzchar(system.file(package = 'pak'))) " {.run install.packages('pak')}",
     '>' = " {.run pak::pkg_install('{pkg}')}" ))
-  
 }
 
