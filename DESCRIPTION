@@ -1,8 +1,8 @@
 Package: rbiom
 Type: Package
 Title: Read/Write, Analyze, and Visualize 'BIOM' Data
-Version: 2.0.13
-Date: 2025-01-23
+Version: 2.1.1
+Date: 2025-03-10
 Authors@R: c(
     person(
       "Daniel P.", "Smith",
@@ -25,7 +25,7 @@ Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.2.0)
 RoxygenNote: 7.3.2
-Config/Needs/website: rmarkdown, phyloseq, npregfast
+Config/Needs/website: rmarkdown, phyloseq, npregfast, withr
 Config/testthat/edition: 3
 Imports: methods, mgcv, stats, utils, ape, dplyr, emmeans, fillpattern,
         ggbeeswarm, ggnewscale, ggplot2, ggrepel, ggtext, jsonlite,
@@ -35,9 +35,9 @@ Suggests: cli, crayon, ggdensity, glue, labeling, lifecycle, openxlsx,
         optparse, pkgconfig, prettycode, R6, rlang, scales, testthat,
         tibble, tsne, uwot
 NeedsCompilation: yes
-Packaged: 2025-01-23 23:15:16 UTC; Daniel
+Packaged: 2025-03-10 18:29:50 UTC; Daniel
 Author: Daniel P. Smith [aut, cre] (<https://orcid.org/0000-0002-2479-2044>),
   Alkek Center for Metagenomics and Microbiome Research [cph, fnd]
 Maintainer: Daniel P. Smith <dansmith01@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-01-24 10:00:01 UTC
+Date/Publication: 2025-03-10 18:50:02 UTC

@@ -250,7 +250,7 @@ write_biom_hdf5 <- function (biom, file) {
   invisible(h5createGroup(file, 'sample/metadata'))
   invisible(h5createGroup(file, 'sample/group-metadata'))
   
-  h5 <- try(H5Fopen(file, 'H5F_ACC_RDWR'), silent = TRUE)
+  h5 <- try(H5Fopen(file, 'H5F_ACC_RDWR', native = TRUE), silent = TRUE)
   if (!inherits(h5, "H5IdComponent"))
     cli_abort("Can't open HDF5 file {.file {file}}: {h5}")
   
@@ -371,6 +371,7 @@ write_biom_hdf5 <- function (biom, file) {
 #' @rdname write_biom
 #' @export
 write_metadata <- function (biom, file, quote = FALSE, sep = "\t", ...) {
+  
   write_wrapper(file, function (con) {
     as_rbiom(biom)$metadata %>%
       write.table(file = con, quote = quote, sep = sep, row.names = FALSE, ...)
@@ -378,11 +379,10 @@ write_metadata <- function (biom, file, quote = FALSE, sep = "\t", ...) {
 }
 
 
-
-
 #' @rdname write_biom
 #' @export
 write_counts <- function (biom, file, quote = FALSE, sep = "\t", ...) {
+  
   write_wrapper(file, function (con) {
     as_rbiom(biom)$counts %>% 
       as.matrix() %>% 
@@ -394,6 +394,7 @@ write_counts <- function (biom, file, quote = FALSE, sep = "\t", ...) {
 #' @rdname write_biom
 #' @export
 write_taxonomy <- function (biom, file, quote = FALSE, sep = "\t", ...) {
+  
   write_wrapper(file, function (con) {
     as_rbiom(biom)$taxonomy %>%
       write.table(file = con, quote = quote, sep = sep, row.names = FALSE, ...)
@@ -520,5 +521,204 @@ write_wrapper <- function (outfile, callback) {
   
   
 }
+
+
+
+
+#' Export data to QIIME 2 or mothur.
+#' 
+#' @description
+#' Populates a directory with the following files, formatted according to 
+#' QIIME 2 or mothur's specifications.
+#' 
+#' * `biom_counts.tsv`
+#' * `biom_metadata.tsv`
+#' * `biom_taxonomy.tsv`
+#' * `biom_tree.nwk`
+#' * `biom_seqs.fna`
+#' 
+#' `biom_counts.tsv` will always be created. The others are dependent on 
+#' whether the content is present in the `biom` argument.
+#' 
+#' 
+#' @name export
+#' @inherit documentation_default
+#' 
+#' @param dir  Where to save the files. If the directory doesn't exist, it will 
+#'        be created. Default: `tempfile()`
+#' 
+#' @param prefix  A string to prepend to each file name. Default: `'biom_'`
+#' 
+#' @return The normalized directory path that was written to (invisibly).
+#' 
+#' 
+#' @export
+#' @examples
+#'     library(rbiom)
+#'     
+#'     tdir <- tempfile()
+#'     
+#'     write_qiime2(hmp50, tdir, 'qiime2_')
+#'     write_mothur(hmp50, tdir, 'mothur_')
+#'     
+#'     list.files(tdir)
+#'     
+#'     readLines(file.path(tdir, 'qiime2_metadata.tsv'), n = 4)
+#'     
+#'     readLines(file.path(tdir, 'mothur_taxonomy.tsv'), n = 3)
+#'     
+#'     unlink(tdir, recursive = TRUE)
+#' 
+
+write_mothur <- function (biom, dir = tempfile(), prefix = 'biom_') {
+  
+  biom <- as_rbiom(biom)
+  
+  dir <- normalizePath(dir, winslash = '/', mustWork = FALSE)
+  if (!dir.exists(dir)) dir.create(path = dir, recursive = TRUE)
+  
+  validate_string('prefix')
+  
+  
+  # Counts
+  write_wrapper(file.path(dir, paste0(prefix, 'counts.tsv')), function (con) {
+    as_rbiom(biom)$counts %>% 
+      as.matrix() %>%
+      tibble::as_tibble(rownames = "Representative_Sequence") %>%
+      dplyr::mutate('total' = as.vector(row_sums(biom$counts)), .after = 1) %>% 
+      write.table(file=con, sep="\t", quote=FALSE, row.names=FALSE, col.names=TRUE)
+  })
+  
+  
+  # Tree
+  if (!is.null(biom$tree))
+    write_tree(biom, file.path(dir, paste0(prefix, 'tree.nwk')))
+  
+  
+  # Sequences
+  if (!is.null(biom$sequences))
+    write_fasta(biom, file.path(dir, paste0(prefix, 'seqs.fna')))
+  
+  
+  # Taxonomy
+  if (ncol(biom$taxonomy) > 1)
+    write_wrapper(file.path(dir, paste0(prefix, 'taxonomy.tsv')), function (con) {
+      tibble::tibble(
+        'OTU'      = seq_len(biom$n_otus),
+        'Size'     = row_sums(biom$counts) %>% as.vector(),
+        'Taxonomy' = apply(as.matrix(biom$taxonomy[,-1]), 1L, paste, collapse=';') %>% gsub(' ', '_', ., fixed = TRUE) ) %>%
+        write.table(file=con, sep="\t", quote=FALSE, row.names=FALSE, col.names=TRUE)
+    })
+  
+  
+  # Metadata
+  if (ncol(biom$metadata) > 1)
+    write_wrapper(file.path(dir, paste0(prefix, 'metadata.tsv')), function (con) {
+      
+      tbl <- as_rbiom(biom)$metadata
+      
+      colnames(tbl) %<>% gsub('[\\s\\t\\n]+', '_', ., perl = TRUE)
+      colnames(tbl)[[1]] <- 'group'
+      tbl[[1]] %<>% as.character()
+      
+      for (i in seq_len(ncol(tbl)))
+        if (is.factor(tbl[[i]])) {
+          x <- levels(tbl[[i]])
+          x[grep('[\\s\\t\\"]', x, perl = TRUE)] %<>% shQuote(type = 'cmd')
+          levels(tbl[[i]]) <- x
+        }
+      
+      write.table(tbl, file = con, quote = FALSE, sep = "\t", row.names = FALSE)
+    })
+  
+  
+  return (invisible(dir))
+}
+
+
+
+#' @rdname export
+#' @export
+
+write_qiime2 <- function (biom, dir = tempfile(), prefix = 'biom_') {
+  
+  biom <- as_rbiom(biom)
+  
+  dir <- normalizePath(dir, winslash = '/', mustWork = FALSE)
+  if (!dir.exists(dir)) dir.create(path = dir, recursive = TRUE)
+  
+  validate_string('prefix')
+  
+  
+  # Counts
+  write_wrapper(file.path(dir, paste0(prefix, 'counts.tsv')), function (con) {
+    as_rbiom(biom)$counts %>% 
+      as.matrix() %>%
+      tibble::as_tibble(rownames = "#OTU ID") %>%
+      write.table(file=con, sep="\t", quote=FALSE, row.names=FALSE, col.names=TRUE)
+  })
+  
+  
+  # Tree
+  if (!is.null(biom$tree))
+    write_tree(biom, file.path(dir, paste0(prefix, 'tree.nwk')))
+  
+  
+  # Sequences
+  if (!is.null(biom$sequences))
+    write_fasta(biom, file.path(dir, paste0(prefix, 'seqs.fna')))
+  
+  
+  # Taxonomy
+  if (ncol(biom$taxonomy) > 1)
+    write_wrapper(file.path(dir, paste0(prefix, 'taxonomy.tsv')), function (con) {
+      tibble::tibble(
+        'Feature ID' = biom$otus,
+        'Taxon'      = apply(as.matrix(biom$taxonomy[,-1]), 1L, paste, collapse='; ') %>% gsub(' ', '_', ., fixed = TRUE),
+        'Confidence' = rep(1, biom$n_otus) ) %>%
+        write.table(file=con, sep="\t", quote=FALSE, row.names=FALSE, col.names=TRUE)
+    })
+  
+  
+  # Metadata
+  if (ncol(biom$metadata) > 1)
+    write_wrapper(file.path(dir, paste0(prefix, 'metadata.tsv')), function (con) {
+      
+      tbl     <- as_rbiom(biom)$metadata
+      headers <- colnames(tbl)
+      
+      # As per https://docs.qiime2.org/2024.10/tutorials/metadata
+      bad <- tolower(headers) %in% c('id', 'sampleid', 'sample id', 'sample-id', 'featureid', 'feature id', 'feature-id')
+      bad <- bad | (headers %in% c('#SampleID', '#Sample ID', '#OTUID', '#OTU ID', 'sample_name'))
+      headers <- ifelse(bad, paste0('_', headers), headers)
+      
+      headers[grep('[\\s\\t\\n\\"]', headers, perl = TRUE)] %<>% shQuote(type = 'cmd')
+      headers %<>% gsub('\\"', '""', ., fixed = TRUE)
+      
+      headers[[1]] <- 'sample-id'
+      cat(file = con, sep = '', paste(collapse = '\t', headers), '\n')
+      cat(file = con, sep = '', '#q2:types')
+      
+      for (i in seq_len(ncol(tbl))[-1]) {
+        if (is.factor(tbl[[i]])) {
+          cat(file = con, sep = '', '\tcategorical')
+          x <- levels(tbl[[i]])
+          x[grep('[\\s\\t\\n\\"]', x, perl = TRUE)] %<>% shQuote(type = 'cmd')
+          x %<>% gsub('\\"', '""', ., fixed = TRUE)
+          levels(tbl[[i]]) <- x
+        } else {
+          cat(file = con, sep = '', '\tnumeric')
+        }
+      }
+      
+      cat(file = con, sep = '', '\n')
+      
+      write.table(tbl, file = con, quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+    })
+  
+  
+  return (invisible(dir))
+}
+
 
 
