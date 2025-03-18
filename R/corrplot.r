@@ -109,6 +109,11 @@ stats_corrplot <- function (
     
     validate_bool('caption')
     
+    if (!is.null(.dots$rline)) {
+      rline <- .dots$rline
+      .dots$rline <- NULL
+    }
+    
   })
   
   
@@ -326,14 +331,14 @@ rare_corrplot <- function (
       
       plyr::ldply(rLvls, .id = ".depth", function (rLvl) {
         adiv_table(
-          biom  = rarefy(biom, depth = rLvl),
-          adiv  = adiv,
-          md    = c(stat.by, facet.by), 
+          biom      = rarefy(biom, depth = rLvl),
+          adiv      = adiv,
+          md        = c(stat.by, facet.by), 
           transform = transform )
       })
       
     })
-    remove("rline", "biom", "adiv", "transform")
+    remove("biom", "adiv", "transform")
     
     
     #________________________________________________________

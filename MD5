@@ -1,4 +1,4 @@
-d1be665f286f5c5d8e89fa01755993a0 *DESCRIPTION
+41f4987954b20fd6592175aa18a00e54 *DESCRIPTION
 68b8b7dad1a72bd64c1322848092bfca *LICENSE
 ed1d3ab81d2ad928baa983aee501e2cd *NAMESPACE
 05a9eb604403c746b43a53447f70ce09 *R/adiv_table.r
@@ -16,7 +16,7 @@ e8860f88e31c9cc34996227098493d02 *R/boxplot_stats.r
 46b022c51fb3dea31f2dfd9c6c85a19c *R/cache.r
 d8c261d87535f7d9e4b2aa5e0467ec94 *R/clustering.r
 dca5df22dd6114de40adefd295e62c1c *R/convert.r
-0d3d044989e56a49ce75b4cffe906f7d *R/corrplot.r
+d4efc5b852759b4524b63048cabf6a84 *R/corrplot.r
 dc93314750460fed15c10699a8c4b616 *R/corrplot_build.r
 8e3d45bf5a26dcea9bc03544b7055c93 *R/corrplot_stats.r
 2bcfae45f461f5203fc081c12c652f69 *R/data.r
@@ -32,7 +32,7 @@ bd0c28cc11c200c00b2667dbc45483ac *R/plot_heatmap.r
 7e1cd53a28166b90c217ae83feeee26a *R/plot_layers.r
 15394ee751471ee704b4c03e43532060 *R/plot_palettes.r
 73a6d0ad10fae9376edc2380d9925b72 *R/provenance.r
-55e5c87aff6f3e3eb45eca53b17b72aa *R/rare_multiplot.r
+4bd0ff3ecad543d0007ab0ae1c5978cd *R/rare_multiplot.r
 f18bb44f1c20fd498c3022cc72e88bcf *R/rare_stacked.r
 c924a238306030166f7efbde8f6eddac *R/rarefy.r
 4e5b7c3fa0dca1436ac9dc13d0178f92 *R/rbiom-deprecated.r
@@ -55,7 +55,7 @@ bac738bf94ad97507a4cb6f5d6d553ac *R/taxa_stacked.r
 ad022fac34127aa3f3b9e8be4ee38a52 *R/tree_plot.r
 1b10e95a7d974cc7fd782e666eef5f0b *R/utils.r
 648adf9e9e56a87b3a5cb7ca22f53f20 *R/validate.r
-807fe3655d8e0720b346416408e187ac *R/write_biom.r
+92d9a41c021e0eed851f31812fd46ada *R/write_biom.r
 af69c5354dd49f8ddef992c320672be5 *R/write_xlsx.r
 de0a2644ac4245e63ec41bd64c692392 *R/zzz.r
 fd06fd158c0fbb3c69fd7e2f9579d618 *README.md
