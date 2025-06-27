@@ -1,8 +1,8 @@
 Package: rbiom
 Type: Package
 Title: Read/Write, Analyze, and Visualize 'BIOM' Data
-Version: 2.2.0
-Date: 2025-04-04
+Version: 2.2.1
+Date: 2025-06-27
 Authors@R: c(
     person(
       "Daniel P.", "Smith",
@@ -35,9 +35,10 @@ Suggests: cli, crayon, ggdensity, glue, labeling, lifecycle, openxlsx,
         optparse, pkgconfig, prettycode, R6, rlang, scales, testthat,
         tibble, tsne, uwot
 NeedsCompilation: yes
-Packaged: 2025-04-04 19:45:52 UTC; Daniel
-Author: Daniel P. Smith [aut, cre] (<https://orcid.org/0000-0002-2479-2044>),
+Packaged: 2025-06-27 19:52:14 UTC; Daniel
+Author: Daniel P. Smith [aut, cre] (ORCID:
+    <https://orcid.org/0000-0002-2479-2044>),
   Alkek Center for Metagenomics and Microbiome Research [cph, fnd]
 Maintainer: Daniel P. Smith <dansmith01@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-04-04 20:20:02 UTC
+Date/Publication: 2025-06-27 20:10:02 UTC
