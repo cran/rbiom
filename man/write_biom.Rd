@@ -22,11 +22,10 @@ write_fasta(biom, file = NULL)
 
 write_tree(biom, file = NULL)
 
-write_xlsx(biom, file, depth = 0.1, n = NULL, seed = 0, unc = "singly")
+write_xlsx(biom, file, depth = NULL, seed = 0, unc = "singly")
 }
 \arguments{
-\item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
-Any value accepted by \code{\link[=as_rbiom]{as_rbiom()}} can also be given here.}
+\item{biom}{An \link[=rbiom_objects]{rbiom object}, or any value accepted by \code{\link[=as_rbiom]{as_rbiom()}}.}
 
 \item{file}{Path to the output file. File names ending in \code{.gz} or
 \code{.bz2} will be compressed accordingly.
@@ -38,16 +37,15 @@ returns the tibble that would have been written.}
 \item{format}{Options are \code{"tab"}, \code{"json"}, and \code{"hdf5"},
 corresponding to classic tabular format, BIOM format version 1.0 and
 biom version 2.1, respectively. NOTE: to write HDF5 formatted BIOM
-files, the BioConductor R package \code{rhdf5} must be installed.
-Default: \code{"json"}}
+files, the \code{h5lite} R package must be installed. Default: \code{"json"}}
 
 \item{quote, sep, ...}{Parameters passed on to \code{\link[=write.table]{write.table()}}.
 Default: \verb{quote=FALSE, sep="\\t"}}
 
-\item{depth, n}{Passed on to \code{\link[=rarefy_cols]{rarefy_cols()}}. For \code{write_xlsx()} only,
-\code{depth=0} disables rarefaction. Default: \verb{depth=0.1, n=NULL}}
+\item{depth}{Passed on to \code{\link[=rarefy]{rarefy()}}. For \code{write_xlsx()} only,
+\code{depth=0} disables rarefaction. Default: \code{NULL}}
 
-\item{seed}{Random seed to use in rarefying. See \code{\link[=rarefy_cols]{rarefy_cols()}} function
+\item{seed}{Random seed to use in rarefying. See \code{\link[=rarefy]{rarefy()}} function
 for details. Must be a non-negative integer. Default: \code{0}}
 
 \item{unc}{How to handle unclassified, uncultured, and similarly ambiguous
@@ -90,8 +88,8 @@ Per Sample' tab.
       hmp10        <- hmp50$clone()
       hmp10$counts <- hmp10$counts[,1:10] \%>\% rarefy_cols()
       
-      attr(hmp10, "Weighted UniFrac")   <- bdiv_distmat(hmp10, 'unifrac')
-      attr(hmp10, "Unweighted Jaccard") <- bdiv_distmat(hmp10, 'jaccard', weighted=FALSE)
+      attr(hmp10, "Weighted UniFrac") <- bdiv_distmat(hmp10, 'wunifrac')
+      attr(hmp10, "Jaccard")          <- bdiv_distmat(hmp10, 'jaccard')
       
       outfile <- write_xlsx(hmp10, tempfile(fileext = ".xlsx"))
     }

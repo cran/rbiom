@@ -27,14 +27,13 @@ rare_multiplot(
 )
 }
 \arguments{
-\item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
-Any value accepted by \code{\link[=as_rbiom]{as_rbiom()}} can also be given here.}
+\item{biom}{An \link[=rbiom_objects]{rbiom object}, or any value accepted by \code{\link[=as_rbiom]{as_rbiom()}}.}
 
-\item{adiv}{Alpha diversity metric(s) to use. Options are: \code{"OTUs"},
-\code{"Shannon"}, \code{"Chao1"}, \code{"Simpson"}, and/or
-\code{"InvSimpson"}. Set \code{adiv=".all"} to use all metrics.
-Multiple/abbreviated values allowed.
-Default: \code{"Shannon"}}
+\item{adiv}{Alpha diversity metric(s) to use. Options are:
+\code{c("ace", "berger", "brillouin", "chao1", "faith", "fisher",  "simpson", "inv_simpson", "margalef", "mcintosh", "menhinick",  "observed", "shannon", "squares")}.
+For \code{"faith"}, a phylogenetic tree must be present in \code{biom} or
+explicitly provided via \verb{tree=}. Set \code{adiv=".all"} to use all metrics.
+Multiple/abbreviated values allowed. Default: \code{"shannon"}}
 
 \item{layers}{One or more of
 \code{c("trend", "confidence", "point", "name", "residual")}. Single
@@ -89,7 +88,7 @@ Default: \code{0.95}}
 p-values. Run \code{p.adjust.methods} for a list of available
 options. Default: \code{"fdr"}}
 
-\item{transform}{Transformation to apply. Options are:
+\item{transform}{Transformation to apply to calculated values. Options are:
 \code{c("none", "rank", "log", "log1p", "sqrt", "percent")}. \code{"rank"} is
 useful for correcting for non-normally distributions before applying
 regression statistics. Default: \code{"none"}}
@@ -143,8 +142,6 @@ letters instead of shapes on the plot. Character strings may used as well.
 Other rarefaction: 
 \code{\link{rare_corrplot}()},
 \code{\link{rare_stacked}()},
-\code{\link{rarefy}()},
-\code{\link{rarefy_cols}()},
 \code{\link{sample_sums}()}
 
 Other visualization: 

@@ -70,8 +70,12 @@ as_rbiom.phyloseq <- function (biom, ...) {
   
   dots <- list(...)
   
+  counts <- as(biom@otu_table@.Data, "sparseMatrix")
+  if (!biom@otu_table@taxa_are_rows)
+    counts <- t(counts) # nocov
+  
   args <- list(
-    counts    = as.simple_triplet_matrix(biom@otu_table), 
+    counts    = counts, 
     metadata  = if (!is.null(biom@sam_data))  data.frame(biom@sam_data), 
     taxonomy  = if (!is.null(biom@tax_table)) data.frame(biom@tax_table), 
     sequences = if (!is.null(biom@refseq))    as.vector(biom@refseq), 
@@ -92,11 +96,16 @@ as_rbiom.SummarizedExperiment <- function (biom, ...) {
 
   dots <- list(...)
   
+  require_package('SummarizedExperiment', paste("to convert", substitute(biom)))
+  assay   <- getFromNamespace('assay',   'SummarizedExperiment')
+  colData <- getFromNamespace('colData', 'SummarizedExperiment')
+  rowData <- getFromNamespace('rowData', 'SummarizedExperiment')
+  
   args <- list(
-    counts    = as.simple_triplet_matrix(biom@assays@data[[1]]), 
-    metadata  = if (!is.null(biom@colData))         data.frame(biom@colData), 
-    taxonomy  = if (!is.null(biom@elementMetadata)) data.frame(biom@elementMetadata, row.names = biom@NAMES),
-    id        = "Imported SummarizedExperiment Data" )
+    id       = "Imported SummarizedExperiment Data",
+    counts    = as(assay(biom), 'sparseMatrix'), 
+    metadata  = if (!is.null(colData(biom))) data.frame(colData(biom)),
+    taxonomy  = if (!is.null(rowData(biom))) data.frame(rowData(biom)) )
   
   args <- c(dots, args)
   args <- args[!duplicated(names(args))]
@@ -108,18 +117,62 @@ as_rbiom.SummarizedExperiment <- function (biom, ...) {
 
 
 #' @export
+as_rbiom.MultiAssayExperiment <- function (biom, ...) {
+  as_rbiom(biom@ExperimentList[[1]], ...)
+}
+
+
+
+#' @export
 as_rbiom.TreeSummarizedExperiment <- function (biom, ...) {
+  
+  require_package('TreeSummarizedExperiment', paste("to convert", substitute(biom)))
+  assay        <- getFromNamespace('assay',            'SummarizedExperiment')
+  colData      <- getFromNamespace('colData',          'SummarizedExperiment')
+  rowData      <- getFromNamespace('rowData',          'SummarizedExperiment')
+  rowTree      <- getFromNamespace('rowTree',      'TreeSummarizedExperiment')
+  referenceSeq <- getFromNamespace('referenceSeq', 'TreeSummarizedExperiment')
   
   dots <- list(...)
   
   args <- list(
     id        = "Imported TreeSummarizedExperiment Data", 
-    counts    = as.simple_triplet_matrix(biom@assays@data[[1]]), 
-    metadata  = if (!is.null(biom@colData))      data.frame(biom@colData),
-    tree      = if (!is.null(biom@rowTree))      biom@rowTree[[1]],
-    sequences = if (!is.null(biom@referenceSeq)) as.character(biom@referenceSeq),
-    taxonomy  = if (!is.null(biom@rowRanges@elementMetadata))
-      data.frame(biom@rowRanges@elementMetadata, row.names = biom@rowRanges@partitioning@NAMES) )
+    counts    = as(assay(biom), 'sparseMatrix'), 
+    metadata  = if (!is.null(colData(biom)))      data.frame(colData(biom)),
+    tree      = if (!is.null(rowTree(biom)))      rowTree(biom),
+    sequences = if (!is.null(referenceSeq(biom))) as.character(referenceSeq(biom)),
+    taxonomy  = if (!is.null(rowData(biom)))      data.frame(rowData(biom)) )
+  
+  args <- c(dots, args)
+  args <- args[!duplicated(names(args))]
+  biom <- do.call(rbiom$new, args)
+  
+  return (biom)
+}
+
+
+
+#' @export
+as_rbiom.biom <- function (biom, ...) {
+  
+  dots <- list(...)
+  
+  require_package('biomformat', 'reading this object.')
+  
+  header               <- getFromNamespace('header',               'biomformat')
+  biom_data            <- getFromNamespace('biom_data',            'biomformat')
+  observation_metadata <- getFromNamespace('observation_metadata', 'biomformat')
+  sample_metadata      <- getFromNamespace('sample_metadata',      'biomformat')
+  
+  info <- header(biom)
+  
+  args <- list(
+    id           = info[['id']], 
+    date         = info[['date']], 
+    generated_by = info[['generated_by']],
+    counts       = biom_data(biom), 
+    metadata     = sample_metadata(biom),
+    taxonomy     = observation_metadata(biom) )
   
   args <- c(dots, args)
   args <- args[!duplicated(names(args))]
@@ -136,7 +189,7 @@ as_rbiom.default <- function (biom, ...) {
   #________________________________________________________
   # Starting from a matrix-type.
   #________________________________________________________
-  if (inherits(biom, c('matrix', 'simple_triplet_matrix')))
+  if (inherits(biom, c('matrix', 'Matrix')))
     return (rbiom$new(counts = biom, ...))
   
   
@@ -162,7 +215,3 @@ as_rbiom.default <- function (biom, ...) {
     'x' = "Unable to convert {.type {biom}} to {.cls rbiom/R6}.",
     'i' = "See {.fun as_rbiom} for a list of accepted data types for `biom`." ))
 }
-
-
-
-

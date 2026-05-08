@@ -263,8 +263,8 @@ rbiom <- R6::R6Class(
     #________________________________________________________
     fields       = function () attr(private$.metadata, 'names'),
     ranks        = function () attr(private$.taxonomy, 'names'),
-    n_otus       = function () private$.counts$nrow,
-    n_samples    = function () private$.counts$ncol,
+    n_otus       = function () nrow(private$.counts),
+    n_samples    = function () ncol(private$.counts),
     n_fields     = function () length(attr(private$.metadata, 'names')),
     n_ranks      = function () length(attr(private$.taxonomy, 'names')),
     generated_by = function () private$.generated_by,
@@ -296,9 +296,9 @@ rb__sync <- function (self, private, sids, otus) {
   #________________________________________________________
   # Drop zero abundance otus/samples.
   #________________________________________________________
-  i <- sort(unique(mtx$i))
-  j <- sort(unique(mtx$j))
-  if (!length(c(i, j)) == nrow(mtx) + ncol(mtx)) {
+  i <- which(rowSums(mtx) > 0)
+  j <- which(colSums(mtx) > 0)
+  if (length(i) < nrow(mtx) || length(j) < ncol(mtx)) {
     mtx  <- mtx[i,j]
     otus <- otus[i]
     sids <- sids[j]
@@ -358,14 +358,14 @@ rb_init <- function(
   #________________________________________________________
   private$.date <- strftime(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz="UTC")
   if (!is.null(date <- dots[['date']]))
-    if (is_scalar_character(date) && !is.na(date))
+    if (is_scalar_character(date) && !anyNA(date))
       private$.date <- date
   
   #________________________________________________________
   # Read-only hereafter.
   #________________________________________________________
   for (i in c('generated_by', 'pkg_version'))
-    if (is_scalar_character(dots[[i]]) && !is.na(dots[[i]]))
+    if (is_scalar_character(dots[[i]]) && !anyNA(dots[[i]]))
       private[[paste0('.', i)]] <- dots[[i]]
   
   return (invisible(self))
@@ -415,7 +415,7 @@ rb_print <- function (self, private) {
   cli::cli_text("\n")
   
   if (is.null(depth <- private$.depth))
-    depth <- range(col_sums(private$.counts)) %>%
+    depth <- range(colSums(private$.counts)) %>%
     {scales::label_number(scale_cut=scales::cut_si(''))}() %>% 
     sub(' ', '', .) %>% 
     paste(collapse = " - ")
@@ -434,7 +434,7 @@ rb_id <- function (self, private, value) {
   
   if (missing(value)) return (private$.id)
   
-  if (is.null(value) || is.na(value)) value <- "Untitled Dataset"
+  if (is.null(value) || anyNA(value)) value <- "Untitled Dataset"
   if (!is_scalar_character(value)) cli_abort("Invalid `id`: {.type {value}}")
   value <- trimws(value, whitespace = "[\\h\\v]")
   if (nchar(value) < 1)   value <- "Untitled Dataset"
@@ -452,7 +452,7 @@ rb_comment <- function (self, private, value) {
   
   if (missing(value)) return (private$.comment)
   
-  if (is.null(value) || is.na(value)) value <- ""
+  if (is.null(value) || anyNA(value)) value <- ""
   if (!is_scalar_character(value)) cli_abort("Invalid `comment`: {.type {value}}")
   value <- trimws(value, whitespace = "[\\h\\v]")
   if (nchar(value) > 5000) {
@@ -518,7 +518,7 @@ rb_tree <- function (self, private, value) {
     
     # Subsetting a tree is slow. Only do it when required.
     if (!is.null(private$.tree)) {
-      otus <- private$.counts$dimnames[[1]]
+      otus <- private$.counts@Dimnames[[1]]
       tips <- private$.tree$tip.label
       if (!all(tips %in% otus))
         private$.tree <- tree_subset(private$.tree, otus)
@@ -532,7 +532,7 @@ rb_tree <- function (self, private, value) {
     
     validate_tree("value", underscores = private$underscores)
     
-    otus <- private$.counts$dimnames[[1]]
+    otus <- private$.counts@Dimnames[[1]]
     tips <- value$tip.label <- trimws(value$tip.label)
     if (length(missing <- setdiff(otus, tips)) > 0)
       cli_abort(c('x' = sprintf("OTUs missing from tree: {missing}")))
@@ -570,16 +570,17 @@ rb_counts <- function (self, private, value) {
   #________________________________________________________
   # Coerce value to slam matrix.
   #________________________________________________________
-  mtx <- as.simple_triplet_matrix(value)
-  stopifnot(is.simple_triplet_matrix(mtx))
+  mtx <- as(value, "CsparseMatrix")
+  stopifnot(inherits(mtx, "dgCMatrix"))
+  mtx <- Matrix::drop0(mtx)
   
   
   #________________________________________________________
   # Sanity check the new matrix.
   #________________________________________________________
-  if (length(mtx$v) == 0) cli_abort("Matrix is all zeroes.")
-  if (!is.numeric(mtx$v)) cli_abort("Matrix must be numeric, not {.type {mtx$v}}.")
-  if (any(mtx$v < 0))     cli_abort("Matrix can't have negative values.")
+  if (length(mtx@x) == 0) cli_abort("Matrix is all zeroes.")
+  if (!is.numeric(mtx@x)) cli_abort("Matrix must be numeric, not {.type {mtx@x}}.")
+  if (any(mtx@x < 0))     cli_abort("Matrix can't have negative values.")
   
   sids <- colnames(mtx)
   otus <- rownames(mtx)
@@ -635,7 +636,7 @@ rb_counts <- function (self, private, value) {
   #________________________________________________________
   # Note the rarefaction depth, or NULL if unrarefied.
   #________________________________________________________
-  ss <- unique(round(col_sums(mtx), 2))
+  ss <- unique(round(colSums(mtx), 2))
   private$.depth <- if (length(ss) == 1) ss else NULL
   
   
@@ -656,7 +657,7 @@ rb_date <- function (self, private, value) {
     if (is.character(value)) { strptime(value, fmt, tz = "UTC") 
     } else                   { as.POSIXlt(value, tz = "UTC")    } })
   
-  if (!inherits(posix, 'POSIXt') || is.na(posix))
+  if (!inherits(posix, 'POSIXt') || anyNA(posix))
     cli_abort(c(
       x = "Can't parse date given as: {value}.",
       i = "Expected POSIXt object or string in {.code {fmt}} format."))
@@ -669,7 +670,7 @@ rb_date <- function (self, private, value) {
 
 rb_samples <- function (self, private, value) {
   
-  if (missing(value)) return (private$.counts$dimnames[[2]])
+  if (missing(value)) return (private$.counts@Dimnames[[2]])
   
   stopifnot(is.character(value))
   stopifnot(!as.logical(anyDuplicated(value)))
@@ -677,18 +678,18 @@ rb_samples <- function (self, private, value) {
   stopifnot(is.null(names(value)))
   stopifnot(length(value) == self$n_samples)
   
-  prev <- private$.counts$dimnames[[2]]
+  prev <- private$.counts@Dimnames[[2]]
   map  <- function (x) value[match(x, prev)]
   
   private$.hash                   <-  NULL
-  private$.counts$dimnames[[2]]  %<>% map()
+  private$.counts@Dimnames[[2]]  %<>% map()
   private$.metadata[['.sample']] %<>% map()
 }
 
 
 rb_otus <- function (self, private, value) {
   
-  if (missing(value)) return (private$.counts$dimnames[[1]])
+  if (missing(value)) return (private$.counts@Dimnames[[1]])
   
   stopifnot(is.character(value))
   stopifnot(!as.logical(anyDuplicated(value)))
@@ -696,13 +697,12 @@ rb_otus <- function (self, private, value) {
   stopifnot(is.null(names(value)))
   stopifnot(length(value) == self$n_otus)
   
-  prev <- private$.counts$dimnames[[1]]
+  prev <- private$.counts@Dimnames[[1]]
   map  <- function (x) value[match(x, prev)]
   
   private$.hash                  <-  NULL
-  private$.counts$dimnames[[1]] %<>% map()
+  private$.counts@Dimnames[[1]] %<>% map()
   private$.taxonomy[['.otu']]   %<>% map()
   if (!is.null(private$.sequences)) names(private$.sequences) %<>% map()
   if (!is.null(private$.tree))      private$.tree$tip.label   %<>% map()
 }
-

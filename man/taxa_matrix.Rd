@@ -32,8 +32,7 @@ taxa_matrix(
 )
 }
 \arguments{
-\item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
-Any value accepted by \code{\link[=as_rbiom]{as_rbiom()}} can also be given here.}
+\item{biom}{An \link[=rbiom_objects]{rbiom object}, or any value accepted by \code{\link[=as_rbiom]{as_rbiom()}}.}
 
 \item{rank}{What rank(s) of taxa to display. E.g. \code{"Phylum"},
 \code{"Genus"}, \code{".otu"}, etc. An integer vector can also be
@@ -76,7 +75,7 @@ A string can also be given to imply \code{TRUE}, but with that
 value as the name to use instead of "Other".
 Default: \code{FALSE}}
 
-\item{transform}{Transformation to apply. Options are:
+\item{transform}{Transformation to apply to calculated values. Options are:
 \code{c("none", "rank", "log", "log1p", "sqrt", "percent")}. \code{"rank"} is
 useful for correcting for non-normally distributions before applying
 regression statistics. Default: \code{"none"}}
@@ -89,7 +88,7 @@ See \code{rank()} for details. Default: \code{"random"}}
 Default: \code{0}}
 
 \item{sparse}{If \code{TRUE}, returns a
-\code{\link[slam:matrix]{slam::simple_triplet_matrix()}}, otherwise returns a
+sparse matrix from the \code{Matrix} package, otherwise returns a
 normal R matrix object. Default: \code{FALSE}}
 }
 \value{

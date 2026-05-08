@@ -25,8 +25,7 @@ taxa_stats(
 )
 }
 \arguments{
-\item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
-Any value accepted by \code{\link[=as_rbiom]{as_rbiom()}} can also be given here.}
+\item{biom}{An \link[=rbiom_objects]{rbiom object}, or any value accepted by \code{\link[=as_rbiom]{as_rbiom()}}.}
 
 \item{regr}{Dataset field with the x-axis (independent; predictive)
 values. Must be numeric. Default: \code{NULL}}
@@ -75,7 +74,7 @@ Default: \code{FALSE}}
 \item{split.by}{Dataset field(s) that the data should be split by prior to
 any calculations. Must be categorical. Default: \code{NULL}}
 
-\item{transform}{Transformation to apply. Options are:
+\item{transform}{Transformation to apply to calculated values. Options are:
 \code{c("none", "rank", "log", "log1p", "sqrt", "percent")}. \code{"rank"} is
 useful for correcting for non-normally distributions before applying
 regression statistics. Default: \code{"none"}}

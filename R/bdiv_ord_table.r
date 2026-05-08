@@ -14,7 +14,7 @@
 #' @param ...  Additional arguments to pass on to [uwot::umap()], 
 #'        [ape::pcoa()], [vegan::metaMDS()], or [tsne::tsne()].
 #'             
-#' @return A data.frame with columns \code{.sample}, \code{.weighted}, 
+#' @return A data.frame with columns \code{.sample}, 
 #'         \code{.bdiv}, \code{.ord}, \code{.x}, \code{.y}, and (optionally) 
 #'         \code{.z}. Any columns given by \code{md}, \code{split.by}, and 
 #'         \code{stat.by} are included as well.
@@ -37,26 +37,24 @@
 #'     
 
 bdiv_ord_table <- function (
-    biom, bdiv = "Bray-Curtis", ord = "PCoA", weighted = TRUE, md = NULL, k = 2, 
+    biom, bdiv = "bray", ord = "PCoA", weighted = NULL, md = NULL, k = 2, 
     stat.by = NULL, split.by = NULL, tree = NULL, 
     test = "adonis2", seed = 0, permutations = 999, rank = NULL, taxa = 6, 
-    p.top = Inf, p.adj = 'fdr', unc = "singly", underscores = FALSE, ...) {
+    p.top = Inf, p.adj = 'fdr', unc = "singly", 
+    alpha = 0.5, cpus = n_cpus(), ...) {
   
   biom <- as_rbiom(biom)
-  validate_tree(null_ok = TRUE, underscores = underscores)
   
 
   #________________________________________________________
   # Validate and restructure user's arguments.
   #________________________________________________________
   
-  biom <- biom$clone()
-  biom$counts %<>% rescale_cols()
+  biom <- biom_relativize(biom, clone = TRUE)
   tree %<>% aa(display = "tree")
   
   validate_ord(max = Inf)
-  validate_bdiv(max = Inf)
-  validate_bool("weighted", max = Inf)
+  validate_bdiv(multiple = TRUE)
   
   validate_biom_field('md',       null_ok = TRUE, max = Inf)
   validate_biom_field('stat.by',  null_ok = TRUE)
@@ -81,11 +79,16 @@ bdiv_ord_table <- function (
   results <- blply(
     biom   = biom, 
     vars   = split.by, 
-    iters  = list(weighted = weighted, bdiv = bdiv),
+    iters  = list(bdiv = bdiv),
     prefix = TRUE,
-    FUN    = function (b, weighted, bdiv) {
+    FUN    = function (b, bdiv) {
       
-      dm <- bdiv_distmat(biom = b, bdiv = bdiv, weighted = weighted, tree = tree)
+      dm <- bdiv_distmat(
+        biom  = b, 
+        bdiv  = bdiv, 
+        tree  = tree, 
+        alpha = alpha, 
+        cpus  = cpus )
       
       
       #________________________________________________________
@@ -201,7 +204,7 @@ bdiv_ord_table <- function (
         if (length(results) == 1)
           return (paste(
             sep = "\n",
-            "dm     <- %s" %>% fmt_cmd(bdiv_distmat, biom, bdiv, weighted, tree),
+            "dm     <- %s" %>% fmt_cmd(bdiv_distmat, biom, bdiv, tree),
             "groups <- pull(biom, %s)[attr(dm, 'Labels')]" %>% sprintf(double_quote(stat.by)),
             "set.seed(%i)" %>% sprintf(seed),
             sprintf(permutations, fmt = switch(
@@ -215,7 +218,7 @@ bdiv_ord_table <- function (
         # Complex case: stats assembled from multiple iterations.
         #________________________________________________________
         
-        iters   <- list(weighted = weighted, bdiv = bdiv)
+        iters   <- list(bdiv = bdiv)
         dm_args <- list(
           biom   = biom, 
           vars   = split.by, 
@@ -260,7 +263,7 @@ bdiv_ord_table <- function (
         if (length(results) == 1 && length(rank) < 2)
           return (paste(
             sep = "\n",
-            "dm         <- %s" %>% fmt_cmd(bdiv_distmat, biom, bdiv, weighted, tree),
+            "dm         <- %s" %>% fmt_cmd(bdiv_distmat, biom, bdiv, tree),
             "taxa_mtx   <- t(%s)" %>% fmt_cmd(taxa_matrix, biom, rank, taxa, unc),
             "taxa_stats <- plyr::adply(taxa_mtx, 2L, .id = '.taxa', function (abundances) {",
             "  abundances <- abundances[attr(dm, 'Labels')]",
@@ -277,7 +280,7 @@ bdiv_ord_table <- function (
         # Complex case: stats assembled from multiple iterations.
         #________________________________________________________
         
-        iters   <- list(weighted = weighted, bdiv = bdiv)
+        iters   <- list(bdiv = bdiv)
         dm_args <- list(
           biom   = biom, 
           vars   = split.by, 

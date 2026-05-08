@@ -1,5 +1,39 @@
 
 
+test_that("convert_to_animalcules", {
+  
+  skip_on_cran()
+  skip_if_not_installed('S4Vectors')
+  skip_if_not_installed('SummarizedExperiment')
+  skip_if_not_installed('MultiAssayExperiment')
+  
+  x <- suppressMessages(convert_to_animalcules(hmp5))
+  
+  expect_s4_class(x, 'MultiAssayExperiment')
+  expect_s3_class(as_rbiom(x), 'rbiom')
+  
+  x <- x@ExperimentList[[1]]
+  expect_s4_class(x, 'SummarizedExperiment')
+  expect_identical(colnames(x), hmp5$samples)
+  expect_identical(rownames(x), hmp5$otus)
+  expect_equal(x$Age, hmp5$metadata$Age)
+  
+  expect_s3_class(as_rbiom(x), 'rbiom')
+})
+
+
+test_that("convert_to_biomformat", {
+  
+  skip_on_cran()
+  skip_if_not_installed('biomformat')
+  
+  x <- suppressMessages(convert_to_biomformat(hmp5))
+  
+  expect_s4_class(x, 'biom')
+  expect_s3_class(as_rbiom(x), 'rbiom')
+})
+
+
 test_that("convert_to_phyloseq", {
   
   skip_on_cran()
@@ -16,7 +50,6 @@ test_that("convert_to_phyloseq", {
   
   expect_s3_class(as_rbiom(x), 'rbiom')
 })
-
 
 
 test_that("convert_to_SE", {

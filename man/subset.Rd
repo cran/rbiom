@@ -81,9 +81,11 @@ automatically removed from the rbiom object.
 }
 \seealso{
 Other transformations: 
+\code{\link{biom_inflate}()},
+\code{\link{biom_relativize}()},
+\code{\link{biom_rescale}()},
 \code{\link{modify_metadata}},
 \code{\link{rarefy}()},
-\code{\link{rarefy_cols}()},
 \code{\link{slice_metadata}},
 \code{\link{with}()}
 }

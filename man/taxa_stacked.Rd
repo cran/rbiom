@@ -23,8 +23,7 @@ taxa_stacked(
 )
 }
 \arguments{
-\item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
-Any value accepted by \code{\link[=as_rbiom]{as_rbiom()}} can also be given here.}
+\item{biom}{An \link[=rbiom_objects]{rbiom object}, or any value accepted by \code{\link[=as_rbiom]{as_rbiom()}}.}
 
 \item{rank}{What rank(s) of taxa to display. E.g. \code{"Phylum"},
 \code{"Genus"}, \code{".otu"}, etc. An integer vector can also be
@@ -99,6 +98,10 @@ respectively.
 }
 \description{
 Display taxa abundances as a stacked bar graph.
+}
+\details{
+If \code{biom} is rarefied, then relative abundance will be shown on the y-axis.
+Otherwise, raw abundance will be displayed.
 }
 \examples{
     library(rbiom)

@@ -29,8 +29,7 @@ taxa_heatmap(
 )
 }
 \arguments{
-\item{biom}{An \link[=rbiom_objects]{rbiom object}, such as from \code{\link[=as_rbiom]{as_rbiom()}}.
-Any value accepted by \code{\link[=as_rbiom]{as_rbiom()}} can also be given here.}
+\item{biom}{An \link[=rbiom_objects]{rbiom object}, or any value accepted by \code{\link[=as_rbiom]{as_rbiom()}}.}
 
 \item{rank}{What rank(s) of taxa to display. E.g. \code{"Phylum"},
 \code{"Genus"}, \code{".otu"}, etc. An integer vector can also be
@@ -218,8 +217,8 @@ Numeric palette names: \code{"reds"}, \code{"oranges"}, \code{"greens"},
 \examples{
     library(rbiom)
     
-    # Keep and rarefy the 10 most deeply sequenced samples.
-    hmp10 <- rarefy(hmp50, n = 10)
+    # Subset to 10 samples and rarefy them.
+    hmp10 <- rarefy(hmp50[1:10])
     
     taxa_heatmap(hmp10, rank = "Phylum", tracks = "Body Site")
     
